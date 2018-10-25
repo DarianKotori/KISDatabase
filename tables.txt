@@ -1,0 +1,114 @@
+CREATE DATABASE IF NOT EXISTS kis_clients;
+
+USE kis_clients;
+
+CREATE TABLE IF NOT EXISTS noc (
+	code INT(4) NOT NULL,
+	description VARCHAR(150) DEFAULT '',
+	PRIMARY KEY (code)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS client (
+	id INT(11) NOT NULL AUTO_INCREMENT,
+	client_id BIGINT(12) DEFAULT 0,
+	citizen_cert INT(6) DEFAULT 0,
+	vp BOOL DEFAULT 0,
+	given_name VARCHAR(100) DEFAULT '',
+	family_name VARCHAR(100) DEFAULT '',
+	contract_type VARCHAR(4) DEFAULT 'Fed',
+	contract_status VARCHAR(30) DEFAULT '',
+	research_consent_fed BOOL DEFAULT 0,
+	research_consent_prov BOOL DEFAULT 0,
+	home_language VARCHAR(20) DEFAULT '',
+	preferred_language ENUM('English','French') DEFAULT 'English',
+	education ENUM('Not Complete','High School','Trade School','Post Secondary','Advanced Degree','Unknown') DEFAULT 'Unknown',
+	occupation INT(4) DEFAULT NULL,
+	arrival_year INT(4) DEFAULT NULL,
+	sex ENUM('F','M','-') DEFAULT NULL,
+	dob DATE DEFAULT NULL,
+	birth_country VARCHAR(30) DEFAULT '',
+	immigration_class VARCHAR(30) DEFAULT '',
+	address VARCHAR(200) DEFAULT '',
+	city VARCHAR(30) DEFAULT '',
+	postal_code CHAR(6) DEFAULT '',
+	phone CHAR(10) DEFAULT '',
+	phone2 VARCHAR(20) DEFAULT '',
+	email VARCHAR(100) DEFAULT '',
+	notifications BOOL DEFAULT 0,
+	edit_locked INT(11) DEFAULT 0,
+	PRIMARY KEY (id),
+	FOREIGN KEY (occupation) REFERENCES noc(code) ON DELETE SET NULL,
+	UNIQUE INDEX (client_id, citizen_cert, given_name, family_name)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS service (
+	id INT(11) NOT NULL AUTO_INCREMENT,
+	service_name VARCHAR(50) NOT NULL DEFAULT '',
+	category VARCHAR(50) NOT NULL DEFAULT '',
+	PRIMARY KEY (id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS received_services (
+	client INT(11) NOT NULL,
+	service INT(11) NOT NULL,
+	year INT(11) NOT NULL,
+	staff INT(11) NOT NULL,
+	visit INT(11) DEFAULT NULL,
+	FOREIGN KEY (client) REFERENCES client(id) ON DELETE CASCADE,
+	FOREIGN KEY (service) REFERENCES service(id) ON DELETE CASCADE,
+	FOREIGN KEY (visit) REFERENCES visit(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS visit (
+	id INT(11) NOT NULL AUTO_INCREMENT,
+	client INT(11) NOT NULL,
+	comment_date DATE DEFAULT NULL,
+	staff INT(11) NOT NULL,
+	comment_text VARCHAR(500) DEFAULT '',
+	PRIMARY KEY (id),
+	FOREIGN KEY (client) REFERENCES client(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS staff (
+	id INT(11) NOT NULL AUTO_INCREMENT,
+	username VARCHAR(20) NOT NULL DEFAULT '',
+	password VARCHAR(100) NOT NULL DEFAULT '',
+	given_name VARCHAR(100) DEFAULT '',
+	family_name VARCHAR(100) DEFAULT '',
+	title VARCHAR(100) DEFAULT '',
+	PRIMARY KEY (id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS comment (
+	id INT(11) NOT NULL AUTO_INCREMENT,
+	client INT(11) NOT NULL,
+	comment_date DATE DEFAULT NULL,
+	staff INT(11) NOT NULL,
+	comment_text VARCHAR(500) DEFAULT '',
+	PRIMARY KEY (id),
+	FOREIGN KEY (client) REFERENCES client(id) ON DELETE CASCADE,
+	FOREIGN KEY (staff) REFERENCES staff(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS attachment (
+	id INT(11) NOT NULL AUTO_INCREMENT,
+	client INT(11) NOT NULL,
+	name VARCHAR(100) DEFAULT '',
+	data LONGBLOB DEFAULT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (client) REFERENCES client(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+ALTER TABLE client CHANGE COLUMN client_id client_id VARCHAR(20) NOT NULL DEFAULT "";
+ALTER TABLE client CHANGE COLUMN citizen_cert citizen_cert VARCHAR(20) NOT NULL DEFAULT "";
+
+UPDATE client set client_id = "" WHERE client_id = "0";
+UPDATE client set citizen_cert = "" WHERE citizen_cert = "0" AND id > 0;
+
+ALTER TABLE client ADD COLUMN land_province CHAR(2) NOT NULL DEFAULT "";
+
+ALTER TABLE client CHANGE COLUMN sex sex ENUM('F','M','-') DEFAULT NULL;
+
+ALTER TABLE noc CHANGE COLUMN code code CHAR(4) NOT NULL;
+
+ALTER TABLE client CHANGE COLUMN occupation occupation CHAR(4) DEFAULT NULL;
